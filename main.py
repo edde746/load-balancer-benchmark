@@ -5,9 +5,9 @@ TESTS = [
     { "port": 9005, "name": "caddy" },
 ]
 
-REQUESTS = 100_000
+REQUESTS = 1_000
 
-import subprocess,re
+import subprocess,re,platform,psutil
 if subprocess.call(["hey", "-h"], stderr=subprocess.DEVNULL) != 2:
     raise Exception("hey is not installed")
 
@@ -45,6 +45,32 @@ def parse_output(output):
                                   for name, avg, fastest, slowest in details_times}
 
     return parsed_data
+
+def get_processor_name():
+    if platform.system() == "Windows":
+        return platform.processor()
+    elif platform.system() == "Darwin":
+        command = "/usr/sbin/sysctl -n machdep.cpu.brand_string"
+        return subprocess.check_output(command, shell=True).strip().decode()
+    elif platform.system() == "Linux":
+        command = "cat /proc/cpuinfo"
+        all_info = subprocess.check_output(command, shell=True).strip().decode()
+        for line in all_info.split("\n"):
+            if "model name" in line:
+                return line.split(":")[1].strip()
+    return ""
+
+def get_system_info():
+    info = f"""System: {platform.system()}
+System Version: {platform.version()}
+System Architecture: {platform.architecture()}
+Machine Type: {platform.machine()}
+Processor Info: {platform.processor()}
+Processor Name: {get_processor_name()}
+CPU Cores: {psutil.cpu_count(logical=False)}
+Logical CPUs: {psutil.cpu_count(logical=True)}
+RAM Size: {round(psutil.virtual_memory().total / (1024.0 **3))} GB"""
+    return info
 
 tests = []
 for test in TESTS:
@@ -91,4 +117,20 @@ for trace in fig_req_sec['data']: fig.add_trace(trace, row=3, col=1)
     
 fig.update_layout(height=1200, width=1000, title_text="Comparison Plots")
 
-pio.write_html(fig, file='comparison.html', auto_open=True)
+# pio.write_html(fig, file='comparison.html', auto_open=True)
+html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn')
+
+open('comparison.html', 'w').write("""
+<html>
+<head>
+    <title>Load Balancer Comparison</title>
+    <style>body{font-family: sans-serif;}</style>
+</head>
+<body>
+    <h1>Load Balancer Comparison</h1>
+    <p>System Info:</p>
+    <pre>%s</pre>
+    %s
+</body>
+</html>
+""" % (get_system_info(), html))
