@@ -1,4 +1,4 @@
 plotly
 pandas
 psutil
-wmi
+wmi; sys.platform == "win32"

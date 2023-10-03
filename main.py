@@ -1,4 +1,4 @@
-import subprocess,re,platform,psutil,wmi
+import subprocess,re,platform,psutil
 
 HEY_BINARY = "hey"
 
@@ -51,6 +51,7 @@ def parse_output(output):
 
 def get_processor_name():
     if platform.system() == "Windows":
+        import wmi
         # try and get it using wmi first, fallback to platform's module
         inst = wmi.WMI()
         if len(inst.Win32_Processor()) > 0:
