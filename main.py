@@ -1,4 +1,4 @@
-import subprocess,re,platform,psutil
+import subprocess,re,platform,psutil,wmi
 
 HEY_BINARY = "hey"
 
@@ -51,6 +51,10 @@ def parse_output(output):
 
 def get_processor_name():
     if platform.system() == "Windows":
+        # try and get it using wmi first, fallback to platform's module
+        inst = wmi.WMI()
+        if len(inst.Win32_Processor()) > 0:
+            return inst.Win32_Processor()[0].Name
         return platform.processor()
     elif platform.system() == "Darwin":
         command = "/usr/sbin/sysctl -n machdep.cpu.brand_string"
