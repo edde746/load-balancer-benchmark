@@ -1,3 +1,7 @@
+import subprocess,re,platform,psutil
+
+HEY_BINARY = "hey"
+
 TESTS = [
     { "port": 9001, "name": "nginx" },
     { "port": 9002, "name": "haproxy" },
@@ -5,11 +9,10 @@ TESTS = [
     { "port": 9005, "name": "caddy" },
 ]
 
-REQUESTS = 1_000
+REQUESTS = 500_000
 
-import subprocess,re,platform,psutil
-if subprocess.call(["hey", "-h"], stderr=subprocess.DEVNULL) != 2:
-    raise Exception("hey is not installed")
+if subprocess.call([HEY_BINARY, "-h"], stderr=subprocess.DEVNULL) != 2:
+    raise Exception("unable to find hey binary")
 
 def parse_output(output):
     parsed_data = {}
@@ -75,7 +78,7 @@ RAM Size: {round(psutil.virtual_memory().total / (1024.0 **3))} GB"""
 tests = []
 for test in TESTS:
     print(f"Testing {test['name']}")
-    output = subprocess.check_output(["hey", "-n", str(REQUESTS), f"http://localhost:{test['port']}"])
+    output = subprocess.check_output([HEY_BINARY, "-n", str(REQUESTS), f"http://localhost:{test['port']}"])
     tests.append((test['name'], parse_output(output.decode("utf-8"))))
 
 import plotly.express as px
@@ -128,9 +131,9 @@ open('comparison.html', 'w').write("""
 </head>
 <body>
     <h1>Load Balancer Comparison</h1>
-    <p>System Info:</p>
+    <p>Tested with %i requests</p>
     <pre>%s</pre>
     %s
 </body>
 </html>
-""" % (get_system_info(), html))
+""" % (REQUESTS, get_system_info(), html))
