@@ -30,6 +30,14 @@ services:
       - 9005:80
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+  apache:
+    image: httpd:latest
+    environment:
+      - APACHE_LOG_DIR=/usr/local/apache2/logs
+    ports:
+      - 9006:80
+    volumes:
+      - ./httpd.conf:/usr/local/apache2/conf/httpd.conf
   backend:
     build: backend
     expose:

@@ -7,6 +7,7 @@ TESTS = [
     { "port": 9002, "name": "haproxy" },
     { "port": 9004, "name": "traefik" },
     { "port": 9005, "name": "caddy" },
+    { "port": 9006, "name": "httpd" },
 ]
 
 REQUESTS = 500_000
